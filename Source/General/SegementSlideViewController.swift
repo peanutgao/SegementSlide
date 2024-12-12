@@ -3,7 +3,7 @@
 //  SegementSlide
 //
 //  Created by Jiar on 2018/12/7.
-//  Copyright © 2018 Jiar. All rights reserved.
+//  Copyright 2018 Jiar. All rights reserved.
 //
 
 import UIKit
@@ -29,6 +29,16 @@ open class SegementSlideViewController: UIViewController {
     internal var canChildViewScroll: Bool = false
     internal var lastChildBouncesTranslationY: CGFloat = 0
     internal var cachedChildViewControllerIndex: Set<Int> = Set()
+    
+    internal let observationQueue = DispatchQueue(label: "com.segementslide.kvo")
+    internal var isScrolling: Bool = false
+    
+    internal enum ScrollState {
+        case idle
+        case scrolling
+        case bouncing
+    }
+    internal var scrollState: ScrollState = .idle
     
     public var headerStickyHeight: CGFloat {
         let headerHeight = headerView.frame.height.rounded(.up)
@@ -165,13 +175,21 @@ open class SegementSlideViewController: UIViewController {
         return contentView.dequeueReusableViewController(at: index)
     }
     
-    deinit {
-        parentKeyValueObservation?.invalidate()
-        cleanUpChildKeyValueObservations()
-        NotificationCenter.default.removeObserver(self, name: SegementSlideContentView.willCleanUpAllReusableViewControllersNotification, object: nil)
-        #if DEBUG
-        debugPrint("\(type(of: self)) deinit")
-        #endif
+    private func cleanupObservations() {
+        observationQueue.sync {
+            parentKeyValueObservation?.invalidate()
+            parentKeyValueObservation = nil
+            cleanUpChildKeyValueObservations()
+        }
     }
     
+    open override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        cleanupObservations()
+    }
+    
+    deinit {
+        cleanupObservations()
+        NotificationCenter.default.removeObserver(self)
+    }
 }
