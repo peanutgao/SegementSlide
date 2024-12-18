@@ -46,6 +46,10 @@ open class TransparentSlideDefaultViewController: TransparentSlideViewController
 }
 
 extension TransparentSlideDefaultViewController: SegementSlideSwitcherDataSource {
+    public var extraHeight: CGFloat {
+        0
+    }
+    
     
     public var height: CGFloat {
         return switcherHeight

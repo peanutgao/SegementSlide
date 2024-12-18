@@ -40,19 +40,23 @@ open class SegementSlideViewController: UIViewController {
     }
     internal var scrollState: ScrollState = .idle
     
+    private var extraHeight: CGFloat {
+        switcherView.ssDataSource?.extraHeight ?? 0
+    }
+    
     public var headerStickyHeight: CGFloat {
         let headerHeight = headerView.frame.height.rounded(.up)
         if edgesForExtendedLayout.contains(.top) {
-            return headerHeight - topLayoutLength
+            return headerHeight - topLayoutLength - extraHeight
         } else {
-            return headerHeight
+            return headerHeight - extraHeight
         }
     }
     public var switcherHeight: CGFloat {
         return switcherView.ssDataSource?.height ?? 44
     }
     public var contentViewHeight: CGFloat {
-        return view.bounds.height-topLayoutLength-switcherHeight
+        return view.bounds.height-topLayoutLength-switcherHeight - extraHeight
     }
     public var currentIndex: Int? {
         return switcherView.ssSelectedIndex
