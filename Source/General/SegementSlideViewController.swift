@@ -40,9 +40,9 @@ open class SegementSlideViewController: UIViewController {
     public var headerStickyHeight: CGFloat {
         let headerHeight = headerView.frame.height.rounded(.up)
         if edgesForExtendedLayout.contains(.top) {
-            return headerHeight - topLayoutLength - extraHeight
+            return max(0, headerHeight - topLayoutLength - extraHeight)
         } else {
-            return headerHeight - extraHeight
+            return max(0, headerHeight - extraHeight)
         }
     }
 
