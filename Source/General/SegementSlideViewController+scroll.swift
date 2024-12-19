@@ -5,59 +5,61 @@
 //  Created by Jiar on 2019/1/16.
 //  Copyright © 2019 Jiar. All rights reserved.
 //
+
 import UIKit
+
 extension SegementSlideViewController {
     
     internal func parentScrollViewDidScroll(_ parentScrollView: UIScrollView) {
-        // Add scroll state protection
-        guard !isScrolling else { return }
-        isScrolling = true
         defer {
-            DispatchQueue.main.async {
-                self.isScrolling = false
-                self.scrollViewDidScroll(parentScrollView, isParent: true)
-            }
+            scrollViewDidScroll(parentScrollView, isParent: true)
         }
-        
         let parentContentOffsetY = parentScrollView.contentOffset.y
-        
-        // Simplify scroll logic
         switch innerBouncesType {
         case .parent:
-            handleParentScroll(parentScrollView, offsetY: parentContentOffsetY)
+            if !canParentViewScroll {
+                parentScrollView.contentOffset.y = headerStickyHeight
+                canChildViewScroll = true
+            } else if parentContentOffsetY >= headerStickyHeight {
+                parentScrollView.contentOffset.y = headerStickyHeight
+                canParentViewScroll = false
+                canChildViewScroll = true
+            } else {
+                resetOtherCachedChildViewControllerContentOffsetY()
+            }
         case .child:
-            handleChildScroll(parentScrollView, offsetY: parentContentOffsetY)
-        }
-    }
-    
-    private func handleParentScroll(_ scrollView: UIScrollView, offsetY: CGFloat) {
-        if !canParentViewScroll {
-            scrollView.contentOffset.y = headerStickyHeight
-            canChildViewScroll = true
-        } else if offsetY >= headerStickyHeight {
-            scrollView.contentOffset.y = headerStickyHeight
-            canParentViewScroll = false
-            canChildViewScroll = true
-        } else {
-            resetOtherCachedChildViewControllerContentOffsetY()
-        }
-    }
-    
-    private func handleChildScroll(_ scrollView: UIScrollView, offsetY: CGFloat) {
-        if !canParentViewScroll {
-            scrollView.contentOffset.y = headerStickyHeight
-            canChildViewScroll = true
-            return
-        }
-        
-        if offsetY >= headerStickyHeight {
-            scrollView.contentOffset.y = headerStickyHeight
-            canParentViewScroll = false
-            canChildViewScroll = true
-        } else if offsetY <= 0 {
-            scrollView.contentOffset.y = 0
-            canChildViewScroll = true
-            resetOtherCachedChildViewControllerContentOffsetY()
+            let childBouncesTranslationY = -parentScrollView.panGestureRecognizer.translation(in: parentScrollView).y.rounded(.up)
+            defer {
+                lastChildBouncesTranslationY = childBouncesTranslationY
+            }
+            if !canParentViewScroll {
+                parentScrollView.contentOffset.y = headerStickyHeight
+                canChildViewScroll = true
+            } else if parentContentOffsetY >= headerStickyHeight {
+                parentScrollView.contentOffset.y = headerStickyHeight
+                canParentViewScroll = false
+                canChildViewScroll = true
+            } else if parentContentOffsetY <= 0 {
+                parentScrollView.contentOffset.y = 0
+                canChildViewScroll = true
+                resetOtherCachedChildViewControllerContentOffsetY()
+            } else {
+                guard let childScrollView = currentSegementSlideContentViewController?.scrollView else {
+                    resetOtherCachedChildViewControllerContentOffsetY()
+                    return
+                }
+                if childScrollView.contentOffset.y < 0 {
+                    if childBouncesTranslationY > lastChildBouncesTranslationY {
+                        scrollView.contentOffset.y = 0
+                        canChildViewScroll = true
+                    } else {
+                        canChildViewScroll = false
+                    }
+                } else {
+                    canChildViewScroll = false
+                }
+                resetOtherCachedChildViewControllerContentOffsetY()
+            }
         }
     }
     

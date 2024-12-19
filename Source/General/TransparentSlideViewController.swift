@@ -161,7 +161,6 @@ open class TransparentSlideViewController: SegementSlideViewController {
     
     public func reloadNavigationBarStyle() {
         guard let parentScrollView = parentScrollView else {
-            print("Parent scroll view is nil.")
             return
         }
         hasDisplay = false

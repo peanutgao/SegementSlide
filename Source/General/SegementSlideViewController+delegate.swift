@@ -8,42 +8,31 @@
 
 import UIKit
 
-// MARK: - SegementSlideViewController + UIScrollViewDelegate
-
 extension SegementSlideViewController: UIScrollViewDelegate {
-    public func scrollViewShouldScrollToTop(_: UIScrollView) -> Bool {
+    
+    public func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool {
         resetScrollViewStatus()
         resetCurrentChildViewControllerContentOffsetY()
         return true
     }
+    
 }
 
-// MARK: - SegementSlideViewController + SegementSlideContentDelegate
-
 extension SegementSlideViewController: SegementSlideContentDelegate {
+    
     public var segementSlideContentScrollViewCount: Int {
-        switcherView.ssDataSource?.titles.count ?? 0
+        return switcherView.ssDataSource?.titles.count ?? 0
     }
-
+    
     public func segementSlideContentScrollView(at index: Int) -> SegementSlideContentScrollViewDelegate? {
-        segementSlideContentViewController(at: index)
+        return segementSlideContentViewController(at: index)
     }
-
-    public func segementSlideContentView(
-        _ segementSlideContentView: SegementSlideContentView,
-        didSelectAtIndex index: Int,
-        animated: Bool
-    ) {
-        guard index >= 0, index < segementSlideContentScrollViewCount else {
-            print("Invalid index selected: \(index)")
-            return
-        }
-
+    
+    public func segementSlideContentView(_ segementSlideContentView: SegementSlideContentView, didSelectAtIndex index: Int, animated: Bool) {
         cachedChildViewControllerIndex.insert(index)
         if switcherView.ssSelectedIndex != index {
             switcherView.selectItem(at: index, animated: animated)
         }
-
         guard let childViewController = segementSlideContentView.dequeueReusableViewController(at: index) else {
             return
         }
@@ -58,43 +47,49 @@ extension SegementSlideViewController: SegementSlideContentDelegate {
             return
         }
 
-        var isObserving = false
-
-        let keyValueObservation = childScrollView.observe(\.contentOffset, options: [
-            .new,
-            .old
-        ]) { [weak self] scrollView, change in
-            guard let self else {
+        let keyValueObservation = childScrollView.observe(\.contentOffset, options: [.new, .old]) { [weak self] (scrollView, change) in
+            guard let self = self else {
                 return
             }
-            guard !isObserving else {
+            
+            if !Thread.isMainThread {
+                DispatchQueue.main.async {
+                    self.handleChildScrollViewChange(scrollView, change: change, index: index)
+                }
                 return
             }
-            guard change.newValue != change.oldValue else {
-                return
-            }
-
-            isObserving = true
-            defer {
-                isObserving = false
-            }
-
-            if let contentOffsetY = scrollView.forceFixedContentOffsetY {
-                scrollView.forceFixedContentOffsetY = nil
-                scrollView.contentOffset.y = contentOffsetY
-                return
-            }
-            guard index == currentIndex else {
-                return
-            }
-            childScrollViewDidScroll(scrollView)
+            
+            self.handleChildScrollViewChange(scrollView, change: change, index: index)
         }
+        
         childKeyValueObservations[key] = keyValueObservation
     }
-
-    public func cleanupKVOForScrollView(_ scrollView: UIScrollView) {
-        let key = String(format: "%p", scrollView)
-        childKeyValueObservations[key]?.invalidate()
-        childKeyValueObservations.removeValue(forKey: key)
+    
+    private func handleChildScrollViewChange(_ scrollView: UIScrollView, change: NSKeyValueObservedChange<CGPoint>, index: Int) {
+        guard change.newValue != change.oldValue else {
+            return
+        }
+        
+        if let contentOffsetY = scrollView.forceFixedContentOffsetY {
+            scrollView.forceFixedContentOffsetY = nil
+            if scrollView.contentOffset.y != contentOffsetY {
+                scrollView.contentOffset.y = contentOffsetY
+            }
+            return
+        }
+        
+        guard index == currentIndex else {
+            return
+        }
+        
+        if scrollView.isDecelerating || (!scrollView.isDragging && !scrollView.isTracking) {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            childScrollViewDidScroll(scrollView)
+            CATransaction.commit()
+        } else {
+            childScrollViewDidScroll(scrollView)
+        }
     }
+    
 }

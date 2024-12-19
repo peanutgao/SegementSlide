@@ -22,10 +22,10 @@ public class SegementSlideScrollView: UIScrollView, UIGestureRecognizerDelegate 
     }
     
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-    if let otherGestureRecognizers = otherGestureRecognizers, otherGestureRecognizers.contains(otherGestureRecognizer) {
-        return false
-    }
-    return true 
+        if let otherGestureRecognizers = otherGestureRecognizers, otherGestureRecognizers.contains(otherGestureRecognizer) {
+            return false
+        }
+        return true
     }
     
 }

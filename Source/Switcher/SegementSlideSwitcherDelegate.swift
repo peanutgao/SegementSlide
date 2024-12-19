@@ -9,8 +9,8 @@ import UIKit
 
 public protocol SegementSlideSwitcherDataSource: class {
     var height: CGFloat { get }
-    var titles: [String] { get }
     var extraHeight: CGFloat { get }
+    var titles: [String] { get }
 }
 
 public protocol SegementSlideSwitcherDelegate: UIView {
@@ -29,8 +29,12 @@ internal final class SegementSlideSwitcherEmptyView: UIView, SegementSlideSwitch
     var ssSelectedIndex: Int? = nil
     var ssScrollView: UIScrollView = UIScrollView()
     
-    func reloadData() {}
+    func reloadData() {
+        
+    }
     
-    func selectItem(at index: Int, animated: Bool) {}
+    func selectItem(at index: Int, animated: Bool) {
+        
+    }
 }
 

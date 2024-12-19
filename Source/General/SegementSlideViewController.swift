@@ -3,47 +3,40 @@
 //  SegementSlide
 //
 //  Created by Jiar on 2018/12/7.
-//  Copyright 2018 Jiar. All rights reserved.
+//  Copyright © 2018 Jiar. All rights reserved.
 //
 
 import UIKit
+
+// MARK: - BouncesType
 
 public enum BouncesType {
     case parent
     case child
 }
 
+// MARK: - SegementSlideViewController
+
 open class SegementSlideViewController: UIViewController {
-    
     public internal(set) var scrollView: SegementSlideScrollView!
     public internal(set) var headerView: SegementSlideHeaderView!
     public internal(set) var contentView: SegementSlideContentView!
     public internal(set) var switcherView: SegementSlideSwitcherDelegate!
-    internal var innerHeaderView: UIView?
-    
-    internal var safeAreaTopConstraint: NSLayoutConstraint?
-    internal var parentKeyValueObservation: NSKeyValueObservation?
-    internal var childKeyValueObservations: [String: NSKeyValueObservation] = [:]
-    internal var innerBouncesType: BouncesType = .parent
-    internal var canParentViewScroll: Bool = true
-    internal var canChildViewScroll: Bool = false
-    internal var lastChildBouncesTranslationY: CGFloat = 0
-    internal var cachedChildViewControllerIndex: Set<Int> = Set()
-    
-    internal let observationQueue = DispatchQueue(label: "com.segementslide.kvo")
-    internal var isScrolling: Bool = false
-    
-    internal enum ScrollState {
-        case idle
-        case scrolling
-        case bouncing
-    }
-    internal var scrollState: ScrollState = .idle
-    
+    var innerHeaderView: UIView?
+
+    var safeAreaTopConstraint: NSLayoutConstraint?
+    var parentKeyValueObservation: NSKeyValueObservation?
+    var childKeyValueObservations: [String: NSKeyValueObservation] = [:]
+    var innerBouncesType: BouncesType = .parent
+    var canParentViewScroll: Bool = true
+    var canChildViewScroll: Bool = false
+    var lastChildBouncesTranslationY: CGFloat = 0
+    var cachedChildViewControllerIndex: Set<Int> = Set()
+
     private var extraHeight: CGFloat {
         switcherView.ssDataSource?.extraHeight ?? 0
     }
-    
+
     public var headerStickyHeight: CGFloat {
         let headerHeight = headerView.frame.height.rounded(.up)
         if edgesForExtendedLayout.contains(.top) {
@@ -52,22 +45,26 @@ open class SegementSlideViewController: UIViewController {
             return headerHeight - extraHeight
         }
     }
+
     public var switcherHeight: CGFloat {
-        return switcherView.ssDataSource?.height ?? 44
+        switcherView.ssDataSource?.height ?? 44
     }
+
     public var contentViewHeight: CGFloat {
-        return view.bounds.height-topLayoutLength-switcherHeight - extraHeight
+        view.bounds.height - topLayoutLength - switcherHeight - extraHeight
     }
+
     public var currentIndex: Int? {
-        return switcherView.ssSelectedIndex
+        switcherView.ssSelectedIndex
     }
+
     public var currentSegementSlideContentViewController: SegementSlideContentScrollViewDelegate? {
-        guard let currentIndex = currentIndex else {
+        guard let currentIndex else {
             return nil
         }
         return contentView.dequeueReusableViewController(at: currentIndex)
     }
-    
+
     /// you should call `reloadData()` after set this property.
     open var defaultSelectedIndex: Int? {
         didSet {
@@ -75,66 +72,60 @@ open class SegementSlideViewController: UIViewController {
             contentView.defaultSelectedIndex = defaultSelectedIndex
         }
     }
-    
+
     open var bouncesType: BouncesType {
-        return .parent
+        .parent
     }
-    
+
     open func segementSlideHeaderView() -> UIView? {
         if edgesForExtendedLayout.contains(.top) {
             #if DEBUG
-            assert(false, "must override this variable")
+                assertionFailure("must override this variable")
             #endif
             return nil
         } else {
             return nil
         }
     }
-    
+
     open func segementSlideSwitcherView() -> SegementSlideSwitcherDelegate {
         #if DEBUG
-        assert(false, "must override this variable")
+            assertionFailure("must override this variable")
         #endif
         return SegementSlideSwitcherEmptyView()
     }
-    
-    open func segementSlideContentViewController(at index: Int) -> SegementSlideContentScrollViewDelegate? {
+
+    open func segementSlideContentViewController(at _: Int) -> SegementSlideContentScrollViewDelegate? {
         #if DEBUG
-        assert(false, "must override this function")
+            assertionFailure("must override this function")
         #endif
         return nil
     }
-    
-    open func scrollViewDidScroll(_ scrollView: UIScrollView, isParent: Bool) {
-        
-    }
-    
-    open func didSelectContentViewController(at index: Int) {
-        
-    }
-    
+
+    open func scrollViewDidScroll(_: UIScrollView, isParent _: Bool) {}
+
+    open func didSelectContentViewController(at _: Int) {}
+
     open func setupHeader() {
         innerHeaderView = segementSlideHeaderView()
     }
-    
-    open func setupSwitcher() {
 
-    }
-    
+    open func setupSwitcher() {}
+
     open func setupContent() {
         cachedChildViewControllerIndex.removeAll()
     }
-    
-    open override func viewDidLayoutSubviews() {
+
+    override open func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         layoutSegementSlideScrollView()
     }
-    
-    open override func viewDidLoad() {
+
+    override open func viewDidLoad() {
         super.viewDidLoad()
         setup()
     }
-    
+
     /// reload headerView, SwitcherView and ContentView
     ///
     /// you should set `defaultSelectedIndex` before call this method.
@@ -149,51 +140,46 @@ open class SegementSlideViewController: UIViewController {
         switcherView.reloadData()
         layoutSegementSlideScrollView()
     }
-    
+
     /// reload headerView
     public func reloadHeader() {
         setupHeader()
         layoutSegementSlideScrollView()
     }
-    
+
     /// reload SwitcherView
     public func reloadSwitcher() {
         setupSwitcher()
         switcherView.reloadData()
         layoutSegementSlideScrollView()
     }
-    
+
     /// reload ContentView
     public func reloadContent() {
         setupContent()
         contentView.reloadData()
     }
-    
+
     /// select one item by index
     public func selectItem(at index: Int, animated: Bool) {
         switcherView.selectItem(at: index, animated: animated)
     }
-    
+
     /// reuse the `SegementSlideContentScrollViewDelegate`
     public func dequeueReusableViewController(at index: Int) -> SegementSlideContentScrollViewDelegate? {
-        return contentView.dequeueReusableViewController(at: index)
+        contentView.dequeueReusableViewController(at: index)
     }
-    
-    private func cleanupObservations() {
-        observationQueue.sync {
-            parentKeyValueObservation?.invalidate()
-            parentKeyValueObservation = nil
-            cleanUpChildKeyValueObservations()
-        }
-    }
-    
-    open override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        cleanupObservations()
-    }
-    
+
     deinit {
-        cleanupObservations()
-        NotificationCenter.default.removeObserver(self)
+        parentKeyValueObservation?.invalidate()
+        cleanUpChildKeyValueObservations()
+        NotificationCenter.default.removeObserver(
+            self,
+            name: SegementSlideContentView.willCleanUpAllReusableViewControllersNotification,
+            object: nil
+        )
+        #if DEBUG
+            debugPrint("\(type(of: self)) deinit")
+        #endif
     }
 }
