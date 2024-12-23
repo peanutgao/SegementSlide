@@ -47,25 +47,27 @@ extension SegementSlideViewController: SegementSlideContentDelegate {
             return
         }
 
-        let keyValueObservation = childScrollView.observe(\.contentOffset, options: [.new, .old]) { [weak self] (scrollView, change) in
-            guard let self = self else {
-                return
-            }
-            
-            if !Thread.isMainThread {
-                DispatchQueue.main.async {
-                    self.handleChildScrollViewChange(scrollView, change: change, index: index)
+        setupChildScrollViewScrollObserver(childScrollView, index: index, key: key)
+    }
+    
+}
+
+private extension SegementSlideViewController {
+    func setupChildScrollViewScrollObserver(_ childScrollView: UIScrollView, index: Int, key: String) {
+        let keyValueObservation = childScrollView.observe(\.contentOffset, options: [.new, .old]) { (scrollView, change) in
+
+            DispatchQueue.main.async { [weak self, weak scrollView] in
+                guard let self, let scrollView else {
+                    return
                 }
-                return
+                handleChildScrollViewChange(scrollView, change: change, index: index)
             }
-            
-            self.handleChildScrollViewChange(scrollView, change: change, index: index)
         }
         
         childKeyValueObservations[key] = keyValueObservation
     }
     
-    private func handleChildScrollViewChange(_ scrollView: UIScrollView, change: NSKeyValueObservedChange<CGPoint>, index: Int) {
+    func handleChildScrollViewChange(_ scrollView: UIScrollView, change: NSKeyValueObservedChange<CGPoint>, index: Int) {
         guard change.newValue != change.oldValue else {
             return
         }
@@ -91,5 +93,4 @@ extension SegementSlideViewController: SegementSlideContentDelegate {
             childScrollViewDidScroll(scrollView)
         }
     }
-    
 }

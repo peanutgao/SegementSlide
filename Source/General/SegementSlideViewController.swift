@@ -173,11 +173,7 @@ open class SegementSlideViewController: UIViewController {
     deinit {
         parentKeyValueObservation?.invalidate()
         cleanUpChildKeyValueObservations()
-        NotificationCenter.default.removeObserver(
-            self,
-            name: SegementSlideContentView.willCleanUpAllReusableViewControllersNotification,
-            object: nil
-        )
+        NotificationCenter.default.removeObserver(self)
         #if DEBUG
             debugPrint("\(type(of: self)) deinit")
         #endif

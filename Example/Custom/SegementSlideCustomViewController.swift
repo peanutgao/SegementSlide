@@ -56,6 +56,10 @@ open class SegementSlideCustomViewController: SegementSlideViewController {
 }
 
 extension SegementSlideCustomViewController: SegementSlideSwitcherDataSource {
+    public var extraHeight: CGFloat {
+        0
+    }
+    
     
     public var height: CGFloat {
         return switcherViewHeight
