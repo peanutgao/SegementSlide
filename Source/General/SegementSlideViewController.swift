@@ -32,7 +32,7 @@ open class SegementSlideViewController: UIViewController {
     var canChildViewScroll: Bool = false
     var lastChildBouncesTranslationY: CGFloat = 0
     var cachedChildViewControllerIndex: Set<Int> = Set()
-
+    var isHandlingScroll: Bool = false
     private var extraHeight: CGFloat {
         switcherView.ssDataSource?.extraHeight ?? 0
     }

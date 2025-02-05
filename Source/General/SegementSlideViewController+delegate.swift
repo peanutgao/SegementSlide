@@ -73,11 +73,14 @@ private extension SegementSlideViewController {
         }
         
         if let contentOffsetY = scrollView.forceFixedContentOffsetY {
-            scrollView.forceFixedContentOffsetY = nil
-            if scrollView.contentOffset.y != contentOffsetY {
-                scrollView.contentOffset.y = contentOffsetY
-            }
-            return
+          scrollView.forceFixedContentOffsetY = nil
+          if scrollView.contentOffset.y != contentOffsetY {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            scrollView.bounds.origin.y = contentOffsetY
+            CATransaction.commit()
+          }
+          return
         }
         
         guard index == currentIndex else {
