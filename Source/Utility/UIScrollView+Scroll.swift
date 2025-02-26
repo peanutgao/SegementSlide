@@ -20,7 +20,10 @@ extension UIScrollView {
       if let newValue = newValue, contentOffset.y != newValue {
         objc_setAssociatedObject(
           self, &forceFixedContentOffsetYKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        
+        isHandlingContentOffsetChange = true
         setContentOffset(CGPoint(x: contentOffset.x, y: newValue), animated: false)
+        isHandlingContentOffsetChange = false
       } else {
         objc_setAssociatedObject(
           self, &forceFixedContentOffsetYKey, nil, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
@@ -39,6 +42,11 @@ extension UIScrollView {
   }
 
   func forceStopScroll() {
+    isHandlingContentOffsetChange = true
+    defer {
+      isHandlingContentOffsetChange = false
+    }
+    
     var offset = contentOffset
     offset.x -= 1
     offset.y -= 1

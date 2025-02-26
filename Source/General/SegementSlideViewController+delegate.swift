@@ -72,15 +72,20 @@ private extension SegementSlideViewController {
             return
         }
         
+        if scrollView.isHandlingContentOffsetChange {
+            return
+        }
+        scrollView.isHandlingContentOffsetChange = true
+        defer {
+            scrollView.isHandlingContentOffsetChange = false
+        }
+        
         if let contentOffsetY = scrollView.forceFixedContentOffsetY {
-          scrollView.forceFixedContentOffsetY = nil
-          if scrollView.contentOffset.y != contentOffsetY {
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            scrollView.bounds.origin.y = contentOffsetY
-            CATransaction.commit()
-          }
-          return
+            scrollView.forceFixedContentOffsetY = nil
+            if scrollView.contentOffset.y != contentOffsetY {
+                scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: contentOffsetY), animated: false)
+            }
+            return
         }
         
         guard index == currentIndex else {
@@ -88,11 +93,8 @@ private extension SegementSlideViewController {
         }
         
         if scrollView.isDecelerating || (!scrollView.isDragging && !scrollView.isTracking) {
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
             childScrollViewDidScroll(scrollView)
-            CATransaction.commit()
-        } else {
+        } else if scrollView.isDragging {
             childScrollViewDidScroll(scrollView)
         }
     }

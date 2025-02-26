@@ -8,6 +8,8 @@
 
 import UIKit
 
+private var forceFixedContentOffsetYKey: Void?
+
 extension SegementSlideViewController {
     
     internal func setup() {
@@ -210,8 +212,16 @@ extension SegementSlideViewController {
                 continue
             }
             cachedChildViewControllerIndex.remove(index)
+            
+            childScrollView.isHandlingContentOffsetChange = true
             childScrollView.forceStopScroll()
-            childScrollView.forceFixedContentOffsetY = 0
+            objc_setAssociatedObject(
+                childScrollView, 
+                &forceFixedContentOffsetYKey, 
+                CGFloat(0), 
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            childScrollView.setContentOffset(.zero, animated: false)
+            childScrollView.isHandlingContentOffsetChange = false
         }
     }
     
